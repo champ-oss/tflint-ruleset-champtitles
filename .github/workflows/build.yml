@@ -2,11 +2,9 @@ name: build
 
 on:
   push:
-  schedule:
-    - cron: "0 0 * * *"
 
 jobs:
-  test:
+  build:
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
