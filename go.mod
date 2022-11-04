@@ -1,6 +1,6 @@
 module github.com/champ-oss/tflint-ruleset-champtitles
 
-go 1.17
+go 1.18
 
 require (
 	github.com/hashicorp/hcl/v2 v2.14.1
