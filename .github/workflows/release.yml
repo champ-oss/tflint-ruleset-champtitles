@@ -1,33 +1,28 @@
 name: release
 
 on:
+  workflow_dispatch:
   push:
+    paths-ignore:
+      - 'test/src/**'
+      - '.github/**'
+      - 'examples/complete/**'
     branches:
-    - '!*'
-    tags:
-    - v*.*.*
+      - main
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: 1.18
-    - name: Import GPG key
-      id: import_gpg
-      uses: crazy-max/ghaction-import-gpg@v5
-      with:
-        gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-        passphrase: ${{ secrets.PASSPHRASE }}
-    - name: Run GoReleaser
-      uses: goreleaser/goreleaser-action@v4
-      with:
-        version: latest
-        args: release --rm-dist
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+      - uses: actions/checkout@v4
+      - name: tag
+        run: |
+          GIT_SHORT_REF=`git rev-parse --short HEAD`
+          GIT_REMOTE_LATEST_TAG=`git ls-remote --tags | sort -t '/' -k 3 -V | awk -F/ '{ print $3 }' | awk '!/\^\{\}/' | tail -n 1 | cut -d '-' -f1`
+          if [[ -n "$GIT_REMOTE_LATEST_TAG" ]]; then
+              BUMP_TAG_PATCH_VERSION=`echo $GIT_REMOTE_LATEST_TAG | ( IFS=".$IFS" ; read a b c && echo $a.$b.$((c + 1)))`
+              git tag "${BUMP_TAG_PATCH_VERSION}-${GIT_SHORT_REF}"
+          else
+              git tag "v1.0.0-${GIT_SHORT_REF}"
+          fi
+          git push origin --tags
